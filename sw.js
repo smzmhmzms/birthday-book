@@ -1,4 +1,4 @@
-const CACHE = 'birthday-book-v1';
+const CACHE = 'magorekishi-v1';
 const ASSETS = ['./index.html', './manifest.json'];
 
 self.addEventListener('install', e => {

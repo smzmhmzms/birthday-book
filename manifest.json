@@ -1,6 +1,6 @@
 {
-  "name": "誕生日帳",
-  "short_name": "誕生日帳",
+  "name": "孫暦",
+  "short_name": "孫暦",
   "description": "孫や友人の誕生日・年齢・学年・メモを管理するアプリ",
   "start_url": "./index.html",
   "display": "standalone",
