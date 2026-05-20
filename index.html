@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>誕生日帳</title>
+<meta name="theme-color" content="#ffffff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="誕生日帳">
+<link rel="manifest" href="manifest.json">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#ffffff;--bg2:#f5f5f3;--bg3:#efefec;
+  --text:#1a1a18;--text2:#6b6b67;--text3:#a0a09b;
+  --border:rgba(0,0,0,0.12);--border2:rgba(0,0,0,0.22);
+  --info-bg:#e6f1fb;--info-text:#185fa5;--info-border:rgba(24,95,165,0.3);
+  --danger-bg:#fcebeb;--danger-text:#a32d2d;
+  --radius:8px;--radius-lg:12px;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#1c1c1a;--bg2:#252523;--bg3:#2e2e2b;
+    --text:#f0ede8;--text2:#a09d98;--text3:#6b6965;
+    --border:rgba(255,255,255,0.12);--border2:rgba(255,255,255,0.22);
+    --info-bg:#0c2540;--info-text:#7ab8f5;--info-border:rgba(122,184,245,0.3);
+    --danger-bg:#2c1010;--danger-text:#f09595;
+  }
+}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue','Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;min-height:100vh}
+.app{max-width:680px;margin:0 auto;padding:1rem}
+/* header */
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;padding-bottom:0.75rem;border-bottom:0.5px solid var(--border)}
+.app-title{font-size:18px;font-weight:500;display:flex;align-items:center;gap:8px}
+.btn{background:transparent;border:0.5px solid var(--border2);border-radius:var(--radius);padding:8px 14px;font-size:13px;cursor:pointer;color:var(--text);display:inline-flex;align-items:center;gap:6px;font-family:inherit}
+.btn:hover{background:var(--bg2)}
+.btn:active{transform:scale(0.97)}
+.btn-primary{background:var(--info-bg);border-color:var(--info-border);color:var(--info-text);font-weight:500}
+.btn-primary:hover{opacity:0.88}
+/* sort */
+.sort-bar{display:flex;gap:6px;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
+.sort-label{font-size:12px;color:var(--text2)}
+.sort-btn{font-size:12px;padding:5px 10px;border:0.5px solid var(--border);border-radius:var(--radius);background:transparent;cursor:pointer;color:var(--text2);font-family:inherit}
+.sort-btn.active{background:var(--info-bg);border-color:var(--info-border);color:var(--info-text);font-weight:500}
+/* cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1rem;cursor:pointer;transition:border-color 0.15s}
+.card:hover{border-color:var(--border2)}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:500;flex-shrink:0}
+.del-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:18px;padding:2px;line-height:1;opacity:0.6}
+.del-btn:hover{opacity:1;color:var(--danger-text)}
+.card-name{font-size:15px;font-weight:500;margin-bottom:2px}
+.card-yomi{font-size:11px;color:var(--text2);margin-bottom:6px}
+.card-date{font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:6px}
+.badges{display:flex;gap:4px;flex-wrap:wrap}
+.badge{display:inline-block;font-size:11px;padding:3px 8px;border-radius:var(--radius);font-weight:500;line-height:1.4}
+.b-age{background:#eaf3de;color:#3b6d11}
+.b-school{background:#e6f1fb;color:#185fa5}
+.b-soon{background:#faeeda;color:#854f0b}
+.b-memo{background:#eeedfe;color:#534ab7}
+.memo-preview{font-size:11px;color:var(--text2);margin-top:6px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.5}
+/* empty */
+.empty{text-align:center;padding:4rem 1rem;color:var(--text2)}
+.empty-icon{font-size:48px;display:block;margin-bottom:1rem}
+/* overlay */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:100;padding:1rem}
+.modal{background:var(--bg);border-radius:var(--radius-lg);border:0.5px solid var(--border);padding:1.5rem;width:100%;max-width:420px;max-height:90vh;overflow-y:auto}
+.modal h3{font-size:16px;font-weight:500;margin-bottom:1.2rem}
+.sep{border:none;border-top:0.5px solid var(--border);margin:1rem 0}
+.sec-label{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:1rem 0 6px}
+.form-row{margin-bottom:12px}
+.form-row label{display:block;font-size:12px;color:var(--text2);margin-bottom:4px}
+.form-row input,.form-row select,.form-row textarea{width:100%;padding:8px 10px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:14px;font-family:inherit}
+.form-row textarea{resize:vertical;min-height:90px;line-height:1.6}
+.form-row input:focus,.form-row select:focus,.form-row textarea:focus{outline:none;border-color:var(--info-border);box-shadow:0 0 0 2px rgba(24,95,165,0.12)}
+.form-2col{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.wareki-hint{font-size:11px;color:var(--text2);margin-top:3px;min-height:16px}
+.modal-btns{display:flex;gap:8px;margin-top:1.2rem;justify-content:flex-end}
+/* detail */
+.detail-header{display:flex;align-items:center;gap:14px;margin-bottom:1.2rem}
+.detail-avatar{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:500;flex-shrink:0}
+.drow{display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:0.5px solid var(--border);font-size:13px;gap:8px}
+.drow:last-of-type{border-bottom:none}
+.dlabel{color:var(--text2);white-space:nowrap}
+.dval{font-weight:500;text-align:right;line-height:1.6}
+.dval small{font-size:11px;font-weight:400;color:var(--text2)}
+.memo-area{margin-top:0.5rem;background:var(--bg2);border-radius:var(--radius);padding:12px;font-size:13px;line-height:1.7;white-space:pre-wrap;min-height:48px;color:var(--text)}
+.memo-empty{color:var(--text3);font-style:italic}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<script>
+const COLORS=[
+  {bg:'#e6f1fb',color:'#185fa5'},{bg:'#e1f5ee',color:'#0f6e56'},
+  {bg:'#faeeda',color:'#854f0b'},{bg:'#fbeaf0',color:'#993556'},
+  {bg:'#eeedfe',color:'#534ab7'},{bg:'#eaf3de',color:'#3b6d11'},
+  {bg:'#faece7',color:'#993c1d'},{bg:'#f1efe8',color:'#5f5e5a'}
+];
+const ERA=[
+  {name:'令和',start:2019,sm:5,sd:1},
+  {name:'平成',start:1989,sm:1,sd:8},
+  {name:'昭和',start:1926,sm:12,sd:25},
+  {name:'大正',start:1912,sm:7,sd:30},
+  {name:'明治',start:1868}
+];
+
+function toWareki(y,m,d){
+  for(const e of ERA){
+    if(y>e.start||(y===e.start&&(e.sm==null||m>e.sm||(m===e.sm&&d>=e.sd)))){
+      const n=y-e.start+1;
+      return e.name+(n===1?'元':n)+'年';
+    }
+  }
+  return y+'年';
+}
+function getAge(by,bm,bd){
+  const t=new Date();let a=t.getFullYear()-by;
+  if(new Date(t.getFullYear(),bm-1,bd)>t)a--;
+  return a;
+}
+function daysUntil(bm,bd){
+  const t=new Date();const ty=t.getFullYear();
+  let n=new Date(ty,bm-1,bd);
+  if(n<=t)n=new Date(ty+1,bm-1,bd);
+  return Math.ceil((n-t)/864e5);
+}
+function schoolGrade(by,bm,bd){
+  const t=new Date();const ty=t.getFullYear();const tm=t.getMonth()+1;
+  const refY=tm>=4?ty:ty-1;
+  const aprilAge=refY-by-(new Date(refY,3,1)<=new Date(refY,bm-1,bd)?0:1);
+  const g=aprilAge-5;
+  if(g<1){const age=getAge(by,bm,bd);return age<0?null:age+'歳（未就学）';}
+  if(g<=6)return '小学'+g+'年生';
+  if(g<=9)return '中学'+(g-6)+'年生';
+  if(g<=12)return '高校'+(g-9)+'年生';
+  if(g<=16)return '大学'+(g-12)+'年生相当';
+  return null;
+}
+function colorFor(idx){return COLORS[idx%COLORS.length];}
+function initials(n){return n?n.charAt(0):'';}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+const STORE='birthday-book-v1';
+let people=[];
+try{people=JSON.parse(localStorage.getItem(STORE)||'[]');}catch(e){}
+
+function save(){try{localStorage.setItem(STORE,JSON.stringify(people));}catch(e){}}
+
+let sortMode='soon';
+let modalMode=null;
+let activeId=null;
+
+function render(){renderList();renderModal();}
+
+function renderList(){
+  const app=document.getElementById('app');
+  let sorted=[...people];
+  if(sortMode==='name')sorted.sort((a,b)=>a.yomi.localeCompare(b.yomi,'ja'));
+  else if(sortMode==='age')sorted.sort((a,b)=>a.year-b.year||a.month-b.month||a.day-b.day);
+  else sorted.sort((a,b)=>daysUntil(a.month,a.day)-daysUntil(b.month,b.day));
+
+  app.innerHTML=`
+  <div class="header">
+    <span class="app-title">🎂 誕生日帳</span>
+    <button class="btn btn-primary" id="btn-add">＋ 登録</button>
+  </div>
+  <div class="sort-bar">
+    <span class="sort-label">並び替え：</span>
+    <button class="sort-btn ${sortMode==='soon'?'active':''}" data-sort="soon">誕生日が近い順</button>
+    <button class="sort-btn ${sortMode==='age'?'active':''}" data-sort="age">年齢順</button>
+    <button class="sort-btn ${sortMode==='name'?'active':''}" data-sort="name">よみがな順</button>
+  </div>
+  ${!sorted.length?`
+  <div class="empty">
+    <span class="empty-icon">🎂</span>
+    まだ登録がありません<br><br>
+    <button class="btn btn-primary" id="btn-add2">＋ 最初の一人を登録</button>
+  </div>`:`
+  <div class="cards">
+  ${sorted.map(p=>{
+    const age=getAge(p.year,p.month,p.day);
+    const school=schoolGrade(p.year,p.month,p.day);
+    const days=daysUntil(p.month,p.day);
+    const c=colorFor(people.indexOf(p));
+    return `<div class="card" data-id="${p.id}">
+      <div class="card-top">
+        <div class="avatar" style="background:${c.bg};color:${c.color}">${esc(initials(p.name))}</div>
+        <button class="del-btn" data-del="${p.id}" title="削除">🗑</button>
+      </div>
+      <div class="card-name">${esc(p.name)}</div>
+      <div class="card-yomi">${esc(p.yomi)}${p.note?'　'+esc(p.note):''}</div>
+      <div class="card-date">${p.year}年${p.month}月${p.day}日<br><span style="font-size:10px">${toWareki(p.year,p.month,p.day)}</span></div>
+      <div class="badges">
+        <span class="badge b-age">${age}歳</span>
+        ${school?`<span class="badge b-school">${esc(school)}</span>`:''}
+        ${days<=14?`<span class="badge b-soon">あと${days}日🎂</span>`:''}
+        ${p.memo?`<span class="badge b-memo">メモあり</span>`:''}
+      </div>
+      ${p.memo?`<div class="memo-preview">${esc(p.memo)}</div>`:''}
+    </div>`;
+  }).join('')}
+  </div>`}`;
+
+  document.getElementById('btn-add')?.addEventListener('click',()=>openAdd());
+  document.getElementById('btn-add2')?.addEventListener('click',()=>openAdd());
+  document.querySelectorAll('.card').forEach(el=>{
+    el.addEventListener('click',e=>{
+      if(e.target.closest('[data-del]'))return;
+      openDetail(parseInt(el.dataset.id));
+    });
+  });
+  document.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      deletePerson(parseInt(btn.dataset.del));
+    });
+  });
+  document.querySelectorAll('[data-sort]').forEach(btn=>{
+    btn.addEventListener('click',()=>{sortMode=btn.dataset.sort;render();});
+  });
+}
+
+function renderModal(){
+  let el=document.getElementById('modal-overlay');
+  if(!modalMode){if(el)el.remove();return;}
+  if(!el){el=document.createElement('div');el.id='modal-overlay';el.className='overlay';document.body.appendChild(el);}
+  if(modalMode==='add'||modalMode==='edit')renderFormModal(el);
+  else if(modalMode==='detail')renderDetailModal(el);
+}
+
+function renderFormModal(el){
+  const isEdit=modalMode==='edit';
+  const p=isEdit?people.find(x=>x.id===activeId):{};
+  el.innerHTML=`<div class="modal">
+    <h3>${isEdit?esc(p.name)+'の情報を編集':'新しく登録'}</h3>
+    <div class="form-row"><label>名前（漢字）</label><input id="f-name" type="text" placeholder="例：田中花子" value="${esc(p.name||'')}"></div>
+    <div class="form-row"><label>よみがな</label><input id="f-yomi" type="text" placeholder="例：たなかはなこ" value="${esc(p.yomi||'')}"></div>
+    <div class="form-row"><label>続柄・メモ（任意）</label><input id="f-note" type="text" placeholder="例：孫、友人の子" value="${esc(p.note||'')}"></div>
+    <hr class="sep">
+    <div class="sec-label">生年月日</div>
+    <div class="form-2col">
+      <div class="form-row"><label>年（西暦）</label><input id="f-year" type="number" min="1920" max="2099" placeholder="例：2015" value="${p.year||''}"></div>
+      <div class="form-row"><label>月</label><select id="f-month">${[...Array(12)].map((_,i)=>`<option value="${i+1}"${p.month===i+1?' selected':''}>　${i+1}月</option>`).join('')}</select></div>
+    </div>
+    <div class="form-row" style="max-width:130px"><label>日</label><select id="f-day">${[...Array(31)].map((_,i)=>`<option value="${i+1}"${p.day===i+1?' selected':''}>　${i+1}日</option>`).join('')}</select></div>
+    <div class="wareki-hint" id="w-hint"></div>
+    <hr class="sep">
+    <div class="form-row"><label>メモ（好きなもの・苦手なもの・習い事など）</label><textarea id="f-memo" placeholder="例：いちごが大好き。虫が苦手。ピアノを習っている。">${esc(p.memo||'')}</textarea></div>
+    <div class="modal-btns">
+      <button class="btn" id="btn-cancel">キャンセル</button>
+      <button class="btn btn-primary" id="btn-save">${isEdit?'保存':'登録する'}</button>
+    </div>
+  </div>`;
+  el.addEventListener('click',e=>{if(e.target===el)closeModal();});
+  document.getElementById('btn-cancel').addEventListener('click',closeModal);
+  document.getElementById('btn-save').addEventListener('click',()=>saveForm(isEdit?p.id:0));
+  function updW(){
+    const y=parseInt(document.getElementById('f-year').value);
+    const m=parseInt(document.getElementById('f-month').value);
+    const d=parseInt(document.getElementById('f-day').value);
+    const h=document.getElementById('w-hint');
+    if(y>=1868&&m&&d)h.textContent='→ '+toWareki(y,m,d)+'（'+y+'年'+m+'月'+d+'日）';
+    else h.textContent='';
+  }
+  document.getElementById('f-year').addEventListener('input',updW);
+  document.getElementById('f-month').addEventListener('change',updW);
+  document.getElementById('f-day').addEventListener('change',updW);
+  if(p.year)updW();
+}
+
+function renderDetailModal(el){
+  const p=people.find(x=>x.id===activeId);
+  if(!p){closeModal();return;}
+  const age=getAge(p.year,p.month,p.day);
+  const school=schoolGrade(p.year,p.month,p.day);
+  const days=daysUntil(p.month,p.day);
+  const c=colorFor(people.indexOf(p));
+  el.innerHTML=`<div class="modal">
+    <div class="detail-header">
+      <div class="detail-avatar" style="background:${c.bg};color:${c.color}">${esc(initials(p.name))}</div>
+      <div>
+        <div style="font-size:17px;font-weight:500">${esc(p.name)}</div>
+        <div style="font-size:12px;color:var(--text2)">${esc(p.yomi)}${p.note?'　・　'+esc(p.note):''}</div>
+      </div>
+    </div>
+    <div class="sec-label">基本情報</div>
+    <div class="drow"><span class="dlabel">生年月日</span><span class="dval">${p.year}年${p.month}月${p.day}日<br><small>${toWareki(p.year,p.month,p.day)}</small></span></div>
+    <div class="drow"><span class="dlabel">今年の年齢</span><span class="dval">${age}歳</span></div>
+    <div class="drow"><span class="dlabel">今年の学年</span><span class="dval">${school||'（学齢外）'}</span></div>
+    <div class="drow"><span class="dlabel">次の誕生日まで</span><span class="dval">あと${days}日<br><small>${age+1}歳になります</small></span></div>
+    <div class="sec-label">メモ</div>
+    ${p.memo?`<div class="memo-area">${esc(p.memo)}</div>`:`<div class="memo-area memo-empty">メモはありません</div>`}
+    <div class="modal-btns" style="margin-top:1.2rem">
+      <button class="btn" id="btn-close">閉じる</button>
+      <button class="btn btn-primary" id="btn-edit">✏️ 編集</button>
+    </div>
+  </div>`;
+  el.addEventListener('click',e=>{if(e.target===el)closeModal();});
+  document.getElementById('btn-close').addEventListener('click',closeModal);
+  document.getElementById('btn-edit').addEventListener('click',()=>{modalMode='edit';activeId=p.id;renderModal();});
+}
+
+function openAdd(){modalMode='add';activeId=null;renderModal();}
+function openDetail(id){modalMode='detail';activeId=id;renderModal();}
+function closeModal(){modalMode=null;activeId=null;renderModal();}
+
+function saveForm(id){
+  const name=document.getElementById('f-name').value.trim();
+  const yomi=document.getElementById('f-yomi').value.trim();
+  const year=parseInt(document.getElementById('f-year').value);
+  const month=parseInt(document.getElementById('f-month').value);
+  const day=parseInt(document.getElementById('f-day').value);
+  const note=document.getElementById('f-note').value.trim();
+  const memo=document.getElementById('f-memo').value.trim();
+  if(!name||!yomi||!year||!month||!day){alert('名前・よみがな・生年月日を入力してください');return;}
+  if(id){
+    const i=people.findIndex(x=>x.id===id);
+    if(i>=0)people[i]={id,name,yomi,year,month,day,note,memo};
+  }else{
+    people.push({id:Date.now(),name,yomi,year,month,day,note,memo});
+  }
+  save();closeModal();renderList();
+}
+
+function deletePerson(id){
+  const p=people.find(x=>x.id===id);
+  if(!p)return;
+  if(!confirm(p.name+'を削除しますか？'))return;
+  people=people.filter(x=>x.id!==id);
+  save();renderList();
+}
+
+// PWA Service Worker登録
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  });
+}
+
+render();
+</script>
+</body>
+</html>
